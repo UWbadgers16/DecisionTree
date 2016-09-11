@@ -36,4 +36,5 @@
 *.su
 
 # Project specific files
+data/*
 *.arff
