@@ -13,7 +13,7 @@
 
 static Class* classes_head = NULL;                                                                          // initialize head of list of Classes
 static Class* classes_tail = NULL;                                                                          // initialize tail of list of Classes
-static int num_classes = 0;                                                                                 //  number of Classes
+static int num_classes = 0;                                                                                 // number of Classes
 
 // initialize Class
 void init_classes(void)
@@ -45,26 +45,26 @@ void deinit_classes(void)
     num_classes = 0;                                                                                        // reset number of Classes
 }
 
-// add a Class
+// add Class
 void add_class(char* class_name)
 {
     // if there are no Classes yet
     if(num_classes == 0)
     {
-        classes_head = (Class*)malloc(sizeof(Class));                                                       // allocate a new Class
-        classes_head->class_name = (char*)malloc(sizeof(char*) * (strlen(class_name)));                     // allocate a Class string
+        classes_head = (Class*)malloc(sizeof(Class));                                                       // allocate new Class
+        classes_head->class_name = (char*)malloc(sizeof(char*) * (strlen(class_name)));                     // allocate Class string
         strcpy(classes_head->class_name, class_name);                                                       // copy class name to Class
         classes_head->num_examples = 0;                                                                     // set number of examples of class to 0
         classes_head->next = NULL;                                                                          // set next Class pointer to NULL
         classes_tail = classes_head;                                                                        // set tail of Classes list to head
         num_classes++;                                                                                      // increment number of Classes
     }   
-    // if a Class has been added
+    // if Class has been added
     else
     {
-        classes_tail->next = (Class*)malloc(sizeof(Class));                                                 // allocate a new Class and attach to tail of Classes
+        classes_tail->next = (Class*)malloc(sizeof(Class));                                                 // allocate new Class and attach to tail of Classes
         classes_tail = classes_tail->next;                                                                  // set tail of Classes list to new Class
-        classes_tail->class_name = (char*)malloc(sizeof(char*) * (strlen(class_name)));                     // allocate a Class string
+        classes_tail->class_name = (char*)malloc(sizeof(char*) * (strlen(class_name)));                     // allocate Class string
         strcpy(classes_tail->class_name, class_name);                                                       // copy class name to Class
         classes_tail->num_examples = 0;                                                                     // set number of examples of class to 0
         classes_tail->next = NULL;                                                                          // set next Class of new Class to NULL

@@ -16,7 +16,8 @@
 uint8_t read_training_file(FILE* training_file);                                                            // read training file
 void init(void);                                                                                            // initialize parameters
 void deinit(void);                                                                                          // deinitialize parameters
-char* string_uppercase(char* input);                                                                        // return uppercase of a string
+char* string_uppercase(char* input);                                                                        // return uppercase of string
+char* remove_leading_whitespace(char* input);                                                               // return string without leading whitespace
 
 static int total_examples = 0;                                                                              // total number of examples            
 
@@ -111,6 +112,7 @@ uint8_t read_training_file(FILE* training_file)
 {
     // initialize variables
     char line[1024];
+    char* arff_line;
     char* header;
     char* attribute;
     char* type;
@@ -118,26 +120,28 @@ uint8_t read_training_file(FILE* training_file)
     char* value;
     float numeric_value;
     int i, value_count = 0;
-    uint8_t reading_data = 0;                                                                               // flag indicating that data is being read (default to 0)
+    uint8_t reading_data= 0;                                                                                // flag indicating that data is being read (default to 0)
     Feature* features_walker = NULL;
     Class* class = NULL;
     
     // loop through all lines of training file
     while (fgets(line, 1024, training_file) != NULL)
     {
-        // if not an empty line
-        if(strcmp(line, "\n") != 0)
+        arff_line = remove_leading_whitespace(strtok(line, "\r\n"));                                        // remove leading whitespace from file line
+
+        // if not an empty line or comment
+        if((strcmp(arff_line, "") != 0) && (arff_line[0] != '%'))
         {
             // if reading header section
             if(!reading_data)
             {
-                header = strtok(line, " ");                                                                 // read header label
+                header = strtok(arff_line, " ");                                                            // read header label
 
                 // if line contains an attribute
                 if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
                 {
                     // get attribute
-                    attribute = strtok(NULL, " ");
+                    attribute = strtok(NULL, " '");
 
                     // if attribute is not class
                     if(strcmp(string_uppercase(attribute), "CLASS") != 0)
@@ -163,20 +167,20 @@ uint8_t read_training_file(FILE* training_file)
                     else
                     {
                         // loop through classes
-                        while(class_name = strtok(NULL, "{,}\n"))
+                        while(class_name = strtok(NULL, " {,}"))
                         {
                             // add Class
                             add_class(class_name);
                         }
                     }
                 }
-                // if line contains data tag
-                else if(strstr(string_uppercase(header), "@DATA\n") != NULL)
+                // if line contains dattag
+                else if(strstr(string_uppercase(header), "@DATA") != NULL)
                 {
-                    reading_data = 1;                                                                       // set flag indicating that data is being read
+                    reading_data= 1;                                                                        // set flag indicating that datis being read
                 }
             }
-            // if reading data section
+            // if reading datsection
             else
             {
                 value_count = 0;                                                                            // set delimiter count to 0
@@ -185,7 +189,7 @@ uint8_t read_training_file(FILE* training_file)
                 class->num_examples++;                                                                      // increment number of examples of class
                 total_examples++;                                                                           // increment total number of examples
                 
-                // if there is a comma delimiter
+                // if there is commdelimiter
                 if(value = strtok(line, ","))
                 {
                     // if value numeric  
@@ -269,7 +273,7 @@ void deinit(void)
     deinit_features();
 }
 
-// return uppercase of a string
+// return uppercase of string
 char* string_uppercase(char* input)
 {
     // initialize variables
@@ -278,9 +282,29 @@ char* string_uppercase(char* input)
     // loop through string
     for(i = 0; input[i]; i++)
     {
-        input[i] = toupper(input[i]);                                                                       // switch character to lowercase
+        input[i] = toupper(input[i]);                                                                       // switch character to uppercase
     }
 
-    // return lowercase string
+    // return uppercase string
     return input;
+}
+
+// return string without leading whitespace
+char* remove_leading_whitespace(char* input)
+{
+    // initialize variables
+    int i;
+
+    // loop through string
+    for(i = 0; input[i]; i++)
+    {
+        // if character is not space
+        if(!isspace(input[i]))
+        {
+            input = &input[i];                                                                              // set string beginning to first occurence of non-whitespace
+            return input;                                                                                   // return input if there was leading whitespace
+        }
+    }
+
+    return input;                                                                                           // return input if no leading whitespace
 }

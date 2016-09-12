@@ -65,26 +65,26 @@ void deinit_features(void)
     num_features = 0;                                                                                       // reset number of Features
 }
 
-// add a Feature
+// add Feature
 void add_feature(char* feature_name)
 {
     // if there are no Features yet
     if(num_features == 0)
     {
-        features_head = (Feature*)malloc(sizeof(Feature));                                                  // allocate a new Feature
-        features_head->feature_name = (char*)malloc(sizeof(char*) * (strlen(feature_name)));                // allocate a Feature string
+        features_head = (Feature*)malloc(sizeof(Feature));                                                  // allocate new Feature
+        features_head->feature_name = (char*)malloc(sizeof(char*) * (strlen(feature_name)));                // allocate Feature string
         strcpy(features_head->feature_name, feature_name);                                                  // copy feature name to Feature
         features_head->num_values = 0;                                                                      // initialize number of Values of this Feature
         features_head->next = NULL;                                                                         // set next Feature pointer to NULL
         features_tail = features_head;                                                                      // set tail of Features list to head
         num_features++;                                                                                     // increment number of Features
     }   
-    // if a Feature has been added
+    // if Feature has been added
     else
     {
-        features_tail->next = (Feature*)malloc(sizeof(Feature));                                            // allocate a new Feature and attach to tail of Features
+        features_tail->next = (Feature*)malloc(sizeof(Feature));                                            // allocate new Feature and attach to tail of Features
         features_tail = features_tail->next;                                                                // set tail of Features list to new Feature
-        features_tail->feature_name = (char*)malloc(sizeof(char*) * strlen(feature_name));                  // allocate a Feature string
+        features_tail->feature_name = (char*)malloc(sizeof(char*) * strlen(feature_name));                  // allocate Feature string
         strcpy(features_tail->feature_name, feature_name);                                                  // copy feature name to Feature
         features_tail->num_values = 0;                                                                      // initialize number of Values of this Feature
         features_tail->next = NULL;                                                                         // set next Feature of new Feature to NULL
@@ -92,23 +92,23 @@ void add_feature(char* feature_name)
     }
 }
 
-// add a Value
+// add Value
 void add_value(Feature* feature, float value, Class* class)
 {
     // if are are no Values yet
     if(feature->num_values == 0)
     {
-        feature->values_head = (Value*)malloc(sizeof(Value));                                               // allocate a new Value
+        feature->values_head = (Value*)malloc(sizeof(Value));                                               // allocate new Value
         feature->values_head->value = value;                                                                // set value
         feature->values_head->class = class;                                                                // set Class
         feature->values_head->next = NULL;                                                                  // set next Value pointer to NULL
         feature->values_tail = feature->values_head;                                                        // set tail of Values list to head
         feature->num_values++;                                                                              // increment number of Values
     }
-    // if a Value has been added
+    // if Value has been added
     else
     {
-        feature->values_tail->next = (Value*)malloc(sizeof(Value));                                         // allocate a new Value and attach to tail of Values
+        feature->values_tail->next = (Value*)malloc(sizeof(Value));                                         // allocate new Value and attach to tail of Values
         feature->values_tail = feature->values_tail->next;                                                  // set tail of Values list to new Value
         feature->values_tail->value = value;                                                                // set value
         feature->values_tail->class = class;                                                                // set Class

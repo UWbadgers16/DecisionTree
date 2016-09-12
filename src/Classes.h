@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <string.h>
 
-// defines a Class linked list node
+// defines Class linked list node
 typedef struct Class
 {
     struct Class* next;                                                             // pointer to next node
@@ -21,7 +21,7 @@ typedef struct Class
 
 void init_classes(void);															// initialize Classes
 void deinit_classes(void);															// deinitialize Classes
-void add_class(char* class_name);                                                   // add a Class
+void add_class(char* class_name);                                                   // add Class
 Class* get_classes_head(void);                                                      // get Classes head
 Class* get_classes_tail(void);                                                      // get Casses tail
 int get_num_classes(void);															// get number of Classes

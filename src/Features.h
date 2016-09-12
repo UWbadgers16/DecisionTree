@@ -12,7 +12,7 @@
 #include <string.h>
 #include "Classes.h"
 
-// defines a Value linked list node
+// defines Value linked list node
 typedef struct Value
 {
 	float value;																	// value
@@ -20,7 +20,7 @@ typedef struct Value
     Class* class;																	// pointer to Class
 } Value;
 
-// defines a Feature linked list node
+// defines Feature linked list node
 typedef struct Feature
 {
     struct Feature* next;                                                        	// pointer to next node
@@ -32,8 +32,8 @@ typedef struct Feature
 
 void init_features(void);															// initialize Features
 void deinit_features(void);															// deinitialize Features
-void add_feature(char* feature_name);                                				// add a Feature
-void add_value(Feature* feature, float value, Class* class);                       	// add a Value
+void add_feature(char* feature_name);                                				// add Feature
+void add_value(Feature* feature, float value, Class* class);                       	// add Value
 Feature* get_features_head(void);                                               	// get Features head
 Feature* get_features_tail(void);                                               	// get Features tail
 Value* get_values_head(Feature* feature);                                           // get values head
