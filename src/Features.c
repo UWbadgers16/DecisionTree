@@ -13,7 +13,7 @@
 
 static Feature* features_head = NULL;                                                                       // initialize head of list of Features
 static Feature* features_tail = NULL;                                                                       // initialize tail of list of Features
-static int num_features = 0;                                                                                //  number of Features
+static int num_features = 0;                                                                                // number of Features
 
 // initialize Features
 void init_features(void)

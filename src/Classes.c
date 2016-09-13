@@ -13,7 +13,7 @@
 
 static Class* classes_head = NULL;                                                                          // initialize head of list of Classes
 static Class* classes_tail = NULL;                                                                          // initialize tail of list of Classes
-static int num_classes = 0;                                                                                 // number of Classes
+static int num_classes = 0;                                                                                 //  number of Classes
 
 // initialize Class
 void init_classes(void)
