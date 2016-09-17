@@ -5,6 +5,7 @@
  //      Author: John Cabaj
 //
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -29,16 +30,7 @@ uint8_t read_training_file(FILE* training_file)
     // initialize variables
     char line[1024];
     char* arff_line;
-    char* header;
-    char* attribute;
-    char* type;
-    char* class_name;
-    char* value;
-    float numeric_value;
-    int i, value_count = 0;
     uint8_t reading_data= 0;                                                                                // flag indicating that data is being read (default to 0)
-    Feature* features_walker = NULL;
-    Class* class = NULL;
     
     // loop through all lines of training file
     while (fgets(line, 1024, training_file) != NULL)
@@ -51,25 +43,60 @@ uint8_t read_training_file(FILE* training_file)
             // if reading header section
             if(!reading_data)
             {
-                header = strtok(arff_line, " ");                                                            // read header label
+                char* header = strtok(arff_line, " ");                                                      // read header label
 
                 // if line contains an attribute
                 if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
                 {
-                    // get attribute
-                    attribute = strtok(NULL, " '");
+                    char* feature;                                                                          // feature name
+                    char* type;                                                                             // type of feature
+                    uint8_t quotes_feature = 0;                                                             // if feature in double quotes (default to 0)
+
+                    // get rest of line
+                    char* attribute = strtok(NULL, "\0");
+
+                    // check for first quotation mark
+                    char* first_quote = strchr(attribute, '\"');
+
+                    // if there is one quotation mark
+                    if(first_quote != NULL)
+                    {
+                        char* second_quote = strchr(&first_quote[1], '\"');
+
+                        // if there are two quotation marks
+                        if(second_quote != NULL)
+                        {             
+                            feature = malloc(sizeof(char) * (second_quote - &first_quote[1]));              // initialize name of feature in double quotations
+
+                            // get feature name in double quotations
+                            memcpy(feature, &first_quote[1], sizeof(char) * (second_quote - &first_quote[1]));
+
+                            // get attribute type
+                            type = strtok(second_quote, " ");
+                            type = strtok(NULL, " ");
+
+                            quotes_feature = 1;                                                             // set that feature in double quotes (to free feature name later)
+                        }
+                    }
+                    // if there are no quotation marks
+                    else
+                    {
+                        // get feature name
+                        feature = strtok(attribute, " ");
+
+                        // get attribute type
+                        type = strtok(NULL, " ");
+                    }
+
 
                     // if attribute is not class
-                    if(strcmp(string_uppercase(attribute), "CLASS") != 0)
+                    if(strstr(string_uppercase(feature), "CLASS") == NULL)
                     {
-                        // get attribute type
-                        type = strtok(NULL, " \n");
-
                         // if attribute is of type numeric
                         if(strcmp(string_uppercase(type), "NUMERIC") == 0)
                         {
                             // add Feature
-                            add_feature(attribute);
+                            add_feature(feature);
                         }
                         // if attribute is not of type numeric
                         else
@@ -82,12 +109,21 @@ uint8_t read_training_file(FILE* training_file)
                     // if attribute is class
                     else
                     {
+                        char* class_name;                                                                   // class name
+
                         // loop through classes
                         while(class_name = strtok(NULL, " {,}"))
                         {
                             // add Class
                             add_class(class_name);
                         }
+                    }
+
+                    // if feature in double quotes
+                    if(quotes_feature)
+                    {
+                        // free feature name
+                        free(feature);
                     }
                 }
                 // if line contains dattag
@@ -99,7 +135,11 @@ uint8_t read_training_file(FILE* training_file)
             // if reading data section
             else
             {
-                value_count = 0;                                                                            // set delimiter count to 0
+                char* value;                                                                                // feature value string
+                float numeric_value;                                                                        // feature numerical value
+                int value_count = 0;                                                                        // set delimiter count to 0
+                Feature* features_walker = NULL;                                                            // Feature node to walk Features list 
+                Class* class = NULL;                                                                        // Class node
                 features_walker = get_features_head();                                                      // get Features head
                 class = find_class(strrchr(remove_whitespace(strtok(line, "\r\n")), ',')+1);                // get Class
                 class->num_examples++;                                                                      // increment number of examples of class

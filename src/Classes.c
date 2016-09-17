@@ -117,7 +117,7 @@ void print_classes(void)
     // initialize variables
     Class* walker = classes_head;
 
-    printf("CLASSES: ");                                                                                    // print "CLASSES"
+    printf("CLASSES: ");                                                                                    // print "CLASSES: "
 
     // loop through all Classes in list
     while(walker)

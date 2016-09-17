@@ -70,6 +70,11 @@ int main(int argc, char** argv)
         }
         else
         {
+            printf("TOTAL EXAMPLES: %d\n", get_total_examples());                                           // print total number of examples
+
+            // print list of features
+            print_features();
+
             // print list of classes
             print_classes();
 
@@ -88,7 +93,6 @@ int main(int argc, char** argv)
                 class_walker = class_walker->next;                                                          // traverse Class list            
             }
         }
-        printf("%d\n", get_total_examples());
     }
 
     // deinitialize parameters

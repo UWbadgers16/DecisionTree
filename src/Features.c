@@ -159,6 +159,8 @@ void print_features(void)
     // initialize variables
     Feature* walker = features_head;
 
+    printf("FEATURES: ");                                                                                   // print "FEATURES: "
+
     // loop through all Features in list
     while(walker)
     {
@@ -175,7 +177,7 @@ void print_values(Feature* feature)
     // initialize variables
     Value* walker = feature->values_head;
 
-    printf("FEATURES: ");                                                                                    // print "FEATURES"
+    printf("VALUES: ");                                                                                     // print "VALUES: "
 
     // loop through Features list
     while(walker)
