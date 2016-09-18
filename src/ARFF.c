@@ -15,13 +15,22 @@
 char* string_uppercase(char* input);                                                                        // return uppercase of string
 char* remove_whitespace(char* input);                                                                       // return string without whitespace
 char* remove_leading_whitespace(char* input);                                                               // return string without leading whitespace
+char* check_double_quotes(char* string);                                                                    // check string for double quotes and return string between quotes
 
+static char* relation_name = NULL;                                                                          // name of relation
 static int total_examples = 0;                                                                              // total number of examples
 
 // init ARFF reader
 void init_arff(void)
 {
     total_examples = 0;                                                                                     // reset total number of examples  
+}
+
+// deinitialize ARFF
+void deinit_arff(void)
+{
+    // free relation name
+    free(relation_name);
 }
 
 // read training file
@@ -44,41 +53,48 @@ uint8_t read_training_file(FILE* training_file)
             if(!reading_data)
             {
                 char* header = strtok(arff_line, " ");                                                      // read header label
+                char* null_term;
 
+                // if line contains relation
+                if(strcmp(string_uppercase(header), "@RELATION") == 0)
+                {
+                    char* relation = strtok(NULL, "\0");
+                    relation = check_double_quotes(relation);
+
+                    if(relation == NULL)
+                    {
+                        // check for double quotes placed null terminator after relation string
+                        // must find index of null terminator to further tokenize
+                        null_term = strchr(header, '\0');
+
+                        relation = &null_term[1];                                                           // get relation
+                    }
+
+                    relation_name = (char*)malloc(sizeof(char*) * (strlen(relation)));                      // allocate relation name string
+                    strcpy(relation_name, relation);                                                        // copy relation to relation name
+                }
                 // if line contains an attribute
-                if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
+                else if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
                 {
                     char* feature;                                                                          // feature name
                     char* type;                                                                             // type of feature
-                    uint8_t quotes_feature = 0;                                                             // if feature in double quotes (default to 0)
 
                     // get rest of line
                     char* attribute = strtok(NULL, "\0");
 
-                    // check for first quotation mark
-                    char* first_quote = strchr(attribute, '\"');
+                    // check the attribute for double quotes
+                    feature = check_double_quotes(attribute);
 
-                    // if there is one quotation mark
-                    if(first_quote != NULL)
+                    // if the attribute has double quotes
+                    if(feature != NULL)
                     {
-                        char* second_quote = strchr(&first_quote[1], '\"');
+                        // check for double quotes placed null terminator after feature string
+                        // must find index of null terminator to further tokenize
+                        null_term = strchr(feature, '\0');
 
-                        // if there are two quotation marks
-                        if(second_quote != NULL)
-                        {             
-                            feature = malloc(sizeof(char) * (second_quote - &first_quote[1]));              // initialize name of feature in double quotations
-
-                            // get feature name in double quotations
-                            memcpy(feature, &first_quote[1], sizeof(char) * (second_quote - &first_quote[1]));
-
-                            // get attribute type
-                            type = strtok(second_quote, " ");
-                            type = strtok(NULL, " ");
-
-                            quotes_feature = 1;                                                             // set that feature in double quotes (to free feature name later)
-                        }
+                        type = strtok(&null_term[1], " ");                                                  // get attribute type
                     }
-                    // if there are no quotation marks
+                    // if the attribute doesn't have double quotes
                     else
                     {
                         // get feature name
@@ -117,13 +133,6 @@ uint8_t read_training_file(FILE* training_file)
                             // add Class
                             add_class(class_name);
                         }
-                    }
-
-                    // if feature in double quotes
-                    if(quotes_feature)
-                    {
-                        // free feature name
-                        free(feature);
                     }
                 }
                 // if line contains dattag
@@ -207,6 +216,12 @@ uint8_t read_training_file(FILE* training_file)
     return 0;                                                                                               // return 0
 }
 
+// get relation name
+char* print_relation(void)
+{
+    printf("RELATION: %s\n", relation_name);                                                                     // print relation name
+}
+
 // get total number of examples
 int get_total_examples(void)
 {
@@ -269,4 +284,29 @@ char* remove_leading_whitespace(char* input)
     }
 
     return input;                                                                                           // return input if no leading whitespace
+}
+
+// check string for double quotes and return string between quotes
+char* check_double_quotes(char* string)
+{
+    // initialize variables
+    char* quote_string = NULL;
+
+    // check for first quotation mark
+    char* first_quote = strchr(string, '\"');
+
+    // if there is one quotation mark
+    if(first_quote != NULL)
+    {
+        // check for second quotation mark
+        char* second_quote = strchr(&first_quote[1], '\"');
+
+        // if there are two quotation marks
+        if(second_quote != NULL)
+        {
+            quote_string = strtok(first_quote, "\"");                                                       // get string in double quotes
+        }
+    }
+
+    return quote_string;                                                                                    // return string between quotes
 }

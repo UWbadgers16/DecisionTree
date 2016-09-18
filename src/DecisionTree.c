@@ -72,6 +72,9 @@ int main(int argc, char** argv)
         {
             printf("TOTAL EXAMPLES: %d\n", get_total_examples());                                           // print total number of examples
 
+            // print relation name
+            print_relation();
+
             // print list of features
             print_features();
 
@@ -121,6 +124,9 @@ void init(void)
 // deinitialize parameters
 void deinit(void)
 {
+    // deinitialize ARFF
+    deinit_arff();
+    
     // deinitialize Classes
     deinit_classes();
 

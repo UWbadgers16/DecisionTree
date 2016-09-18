@@ -120,11 +120,11 @@ void print_classes(void)
     printf("CLASSES: ");                                                                                    // print "CLASSES: "
 
     // loop through all Classes in list
-    while(walker)
+    while(walker->next)
     {
-        printf("%s ", walker->class_name);                                                                  // print Class name
+        printf("%s,", walker->class_name);                                                                  // print Class name
         walker = walker->next;                                                                              // traverse Class list            
     }
 
-    printf("\n");                                                                                           // print new line
+    printf("%s\n", walker->class_name);                                                                     // print last Class name
 } 

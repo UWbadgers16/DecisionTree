@@ -162,13 +162,13 @@ void print_features(void)
     printf("FEATURES: ");                                                                                   // print "FEATURES: "
 
     // loop through all Features in list
-    while(walker)
+    while(walker->next)
     {
-        printf("%s ", walker->feature_name);                                                                // print Feature name
+        printf("%s,", walker->feature_name);                                                                // print Feature name
         walker = walker->next;                                                                              // traverse Feature list                
     }
 
-    printf("\n");                                                                                           // print new line
+    printf("%s\n", walker->feature_name);                                                                   // print last Feature name
 }
 
 // print contents of Values linked list
@@ -180,11 +180,11 @@ void print_values(Feature* feature)
     printf("VALUES: ");                                                                                     // print "VALUES: "
 
     // loop through Features list
-    while(walker)
+    while(walker->next)
     {
-        printf("%f ", walker->value);                                                                       // print Value
+        printf("%f,", walker->value);                                                                       // print Value
         walker = walker->next;                                                                              // traverse Value list                
     }
 
-    printf("\n");                                                                                           // print new line
+    printf("%f\n", walker->value);                                                                          // print last Value
 } 
