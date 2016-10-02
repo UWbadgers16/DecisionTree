@@ -15,7 +15,7 @@
 char* string_uppercase(char* input);                                                                        // return uppercase of string
 char* remove_whitespace(char* input);                                                                       // return string without whitespace
 char* remove_leading_whitespace(char* input);                                                               // return string without leading whitespace
-char* check_double_quotes(char* string);                                                                    // check string for double quotes and return string between quotes
+uint8_t check_double_quotes(char* string);                                                                  // check string for double quotes
 
 static char* relation_name = NULL;                                                                          // name of relation
 static int total_examples = 0;                                                                              // total number of examples
@@ -44,170 +44,168 @@ uint8_t read_training_file(FILE* training_file)
     // loop through all lines of training file
     while (fgets(line, 1024, training_file) != NULL)
     {
-        arff_line = remove_leading_whitespace(strtok(line, "\r\n"));                                        // remove leading whitespace from file line
+        arff_line = strtok(line, "\r\n");                                                                   // get file line
 
-        // if not an empty line or comment
-        if((strcmp(arff_line, "") != 0) && (arff_line[0] != '%'))
+        // if line exists
+        if(arff_line != NULL)
         {
-            // if reading header section
-            if(!reading_data)
+            arff_line = remove_leading_whitespace(arff_line);                                               // remove leading whitespace from file line
+
+            // if not comment
+            if(arff_line[0] != '%')
             {
-                char* header = strtok(arff_line, " ");                                                      // read header label
-                char* null_term;
-
-                // if line contains relation
-                if(strcmp(string_uppercase(header), "@RELATION") == 0)
+                // if reading header section
+                if(!reading_data)
                 {
-                    char* relation = strtok(NULL, "\0");
-                    relation = check_double_quotes(relation);
+                    char* header = strtok(arff_line, " ");                                                  // read header label
+                    char* null_term;
 
-                    if(relation == NULL)
+                    // if line contains relation
+                    if(strcmp(string_uppercase(header), "@RELATION") == 0)
                     {
-                        // check for double quotes placed null terminator after relation string
-                        // must find index of null terminator to further tokenize
-                        null_term = strchr(header, '\0');
+                        char* relation = strtok(NULL, "\0");
 
-                        relation = &null_term[1];                                                           // get relation
-                    }
-
-                    relation_name = (char*)malloc(sizeof(char*) * (strlen(relation)));                      // allocate relation name string
-                    strcpy(relation_name, relation);                                                        // copy relation to relation name
-                }
-                // if line contains an attribute
-                else if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
-                {
-                    char* feature;                                                                          // feature name
-                    char* type;                                                                             // type of feature
-
-                    // get rest of line
-                    char* attribute = strtok(NULL, "\0");
-
-                    // check the attribute for double quotes
-                    feature = check_double_quotes(attribute);
-
-                    // if the attribute has double quotes
-                    if(feature != NULL)
-                    {
-                        // check for double quotes placed null terminator after feature string
-                        // must find index of null terminator to further tokenize
-                        null_term = strchr(feature, '\0');
-
-                        type = strtok(&null_term[1], " ");                                                  // get attribute type
-                    }
-                    // if the attribute doesn't have double quotes
-                    else
-                    {
-                        // get feature name
-                        feature = strtok(attribute, " ");
-
-                        // get attribute type
-                        type = strtok(NULL, " ");
-                    }
-
-
-                    // if attribute is not class
-                    if(strstr(string_uppercase(feature), "CLASS") == NULL)
-                    {
-                        // if attribute is of type numeric
-                        if(strcmp(string_uppercase(type), "NUMERIC") == 0)
+                        if(check_double_quotes(relation))
                         {
-                            // add Feature
-                            add_feature(feature);
+                            relation = strtok(relation, "\"");                                              // get relation
                         }
-                        // if attribute is not of type numeric
+
+                        relation_name = (char*)malloc(sizeof(char*) * (strlen(relation)));                  // allocate relation name string
+                        strcpy(relation_name, relation);                                                    // copy relation to relation name
+                    }
+                    // if line contains an attribute
+                    else if(strcmp(string_uppercase(header), "@ATTRIBUTE") == 0)
+                    {
+                        char* feature;                                                                      // feature name
+                        char* type;                                                                         // type of feature
+
+                        // get rest of line
+                        char* attribute = strtok(NULL, "\0");
+
+                        // if attributes has double quotes
+                        if(check_double_quotes(attribute))
+                        {
+                            feature = strtok(attribute, "\"");                                              // get feature name
+                        }
+                        // if attribute doesn't have double quotes
                         else
                         {
-                            // notify that numeric attributes must be used
-                            printf("MUST USE NUMERIC ATTRIBUTES\n");
-                            return 1;                                                                       // return 1
+                            feature = strtok(attribute, " ");                                               // get feature name
                         }
-                    }
-                    // if attribute is class
-                    else
-                    {
-                        char* class_name;                                                                   // class name
 
-                        // loop through classes
-                        while(class_name = strtok(NULL, " {,}"))
+                        // if attribute is not class
+                        if(strcmp(string_uppercase(feature), "CLASS") != 0)
                         {
-                            // add Class
-                            add_class(class_name);
+                            // get attribute type
+                            type = strtok(NULL, " ");
+
+                            // if attribute is of type numeric
+                            if(strcmp(string_uppercase(type), "NUMERIC") == 0)
+                            {
+                                // add Feature
+                                add_feature(feature);
+                            }
+                            // if attribute is not of type numeric
+                            else
+                            {
+                                // notify that numeric attributes must be used
+                                printf("MUST USE NUMERIC ATTRIBUTES\n");
+                                return 1;                                                                   // return 1
+                            }
                         }
-                    }
-                }
-                // if line contains dattag
-                else if(strstr(string_uppercase(header), "@DATA") != NULL)
-                {
-                    reading_data= 1;                                                                        // set flag indicating that data is being read
-                }
-            }
-            // if reading data section
-            else
-            {
-                char* value;                                                                                // feature value string
-                float numeric_value;                                                                        // feature numerical value
-                int value_count = 0;                                                                        // set delimiter count to 0
-                Feature* features_walker = NULL;                                                            // Feature node to walk Features list 
-                Class* class = NULL;                                                                        // Class node
-                features_walker = get_features_head();                                                      // get Features head
-                class = find_class(strrchr(remove_whitespace(strtok(line, "\r\n")), ',')+1);                // get Class
-                class->num_examples++;                                                                      // increment number of examples of class
-                total_examples++;                                                                           // increment total number of examples
-                
-                // if there is comma delimiter
-                if(value = strtok(line, ","))
-                {
-                    // if value numeric  
-                    if(sscanf(value, "%f", &numeric_value))
-                    {
-                        // if Feature is exists
-                        if(features_walker)
-                        {
-                            // add feature value
-                            add_value(features_walker, numeric_value, class);
-                            features_walker = features_walker->next;                                        // traverse Feature list
-                            value_count++;                                                                  // increment feature value count
-                        }
-                        // if Feature doesn't exist
+                        // if attribute is class
                         else
                         {
-                            // notify that there are too many feature values
-                            printf("TOO MANY FEATURE VALUES\n");
-                            return 1;                                                                       // return 1
-                        } 
-                    }                                       
-                }
+                            char* class_names;                                                              // class names
+                            char* class_name;                                                               // class name
 
-                // loop through features
-                while(value = strtok(NULL, ","))
-                {
-                    // if value numeric  
-                    if(sscanf(value, "%f", &numeric_value))
-                    {
-                        // if Feature exists
-                        if(features_walker)
-                        {
-                            // add feature value
-                            add_value(features_walker, numeric_value, class);
-                            features_walker = features_walker->next;                                        // traverse Feature list
-                            value_count++;                                                                  // increment feature value count
-                        }
-                        // if Feature doesn't exist
-                        else
-                        {
-                            // notify that there are too many feature values
-                            printf("TOO MANY FEATURE VALUES\n");
-                            return 1;                                                                       // return 1
+                            class_names = strtok(NULL, "{}");                                               // get class names
+                            class_name = strtok(class_names, " ,");                                         // get first class name
+
+                            // loop through classes
+                            while(class_name)
+                            {
+                                // add Class
+                                add_class(class_name);
+
+                                class_name = strtok(NULL, " ,");                                            // get next class name        
+                            }
                         }
                     }
+                    // if line contains dattag
+                    else if(strstr(string_uppercase(header), "@DATA") != NULL)
+                    {
+                        reading_data= 1;                                                                    // set flag indicating that data is being read
+                    }
                 }
-
-                // if number of feature values doesn't equal number of features
-                if(value_count  != get_num_features())
+                // if reading data section
+                else
                 {
-                    // notify that there are too few feature values
-                    printf("TOO FEW FEATURE VALUES\n");
-                    return 1;                                                                               // return 1
+                    char* value;                                                                            // feature value string
+                    float numeric_value;                                                                    // feature numerical value
+                    int value_count = 0;                                                                    // set delimiter count to 0
+                    Feature* features_walker = NULL;                                                        // Feature node to walk Features list 
+                    Class* class = NULL;                                                                    // Class node
+                    features_walker = get_features_head();                                                  // get Features head
+                    class = find_class(strrchr(remove_whitespace(strtok(line, "\r\n")), ',')+1);            // get Class
+                    class->num_examples++;                                                                  // increment number of examples of class
+                    total_examples++;                                                                       // increment total number of examples
+                    
+                    // if there is comma delimiter
+                    if(value = strtok(line, ","))
+                    {
+                        // if value numeric  
+                        if(sscanf(value, "%f", &numeric_value))
+                        {
+                            // if Feature is exists
+                            if(features_walker)
+                            {
+                                // add feature value
+                                add_value(features_walker, numeric_value, class);
+                                features_walker = features_walker->next;                                    // traverse Feature list
+                                value_count++;                                                              // increment feature value count
+                            }
+                            // if Feature doesn't exist
+                            else
+                            {
+                                // notify that there are too many feature values
+                                printf("TOO MANY FEATURE VALUES\n");
+                                return 1;                                                                   // return 1
+                            } 
+                        }                                       
+                    }
+
+                    // loop through features
+                    while(value = strtok(NULL, ","))
+                    {
+                        // if value numeric  
+                        if(sscanf(value, "%f", &numeric_value))
+                        {
+                            // if Feature exists
+                            if(features_walker)
+                            {
+                                // add feature value
+                                add_value(features_walker, numeric_value, class);
+                                features_walker = features_walker->next;                                    // traverse Feature list
+                                value_count++;                                                              // increment feature value count
+                            }
+                            // if Feature doesn't exist
+                            else
+                            {
+                                // notify that there are too many feature values
+                                printf("TOO MANY FEATURE VALUES\n");
+                                return 1;                                                                   // return 1
+                            }
+                        }
+                    }
+
+                    // if number of feature values doesn't equal number of features
+                    if(value_count  != get_num_features())
+                    {
+                        // notify that there are too few feature values
+                        printf("TOO FEW FEATURE VALUES\n");
+                        return 1;                                                                           // return 1
+                    }
                 }
             }
         }
@@ -219,7 +217,7 @@ uint8_t read_training_file(FILE* training_file)
 // get relation name
 char* print_relation(void)
 {
-    printf("RELATION: %s\n", relation_name);                                                                     // print relation name
+    printf("RELATION: %s\n", relation_name);                                                                // print relation name
 }
 
 // get total number of examples
@@ -286,12 +284,9 @@ char* remove_leading_whitespace(char* input)
     return input;                                                                                           // return input if no leading whitespace
 }
 
-// check string for double quotes and return string between quotes
-char* check_double_quotes(char* string)
+// check string for double quotes
+uint8_t check_double_quotes(char* string)
 {
-    // initialize variables
-    char* quote_string = NULL;
-
     // check for first quotation mark
     char* first_quote = strchr(string, '\"');
 
@@ -304,9 +299,9 @@ char* check_double_quotes(char* string)
         // if there are two quotation marks
         if(second_quote != NULL)
         {
-            quote_string = strtok(first_quote, "\"");                                                       // get string in double quotes
+            return 1;                                                                                       // return double quotes
         }
     }
 
-    return quote_string;                                                                                    // return string between quotes
+    return 0;                                                                                               // return no double quotes
 }
